@@ -1,9 +1,34 @@
-import { Card, Image, Text, Flex, Grid, ActionIcon } from '@mantine/core';
-import { IconPlus } from '@tabler/icons-react';
+import { Card, Image, Text, Flex, Grid, Button, LoadingOverlay } from '@mantine/core';
+import { IconShoppingCart } from '@tabler/icons-react';
+import { useState } from 'react';
+import { buy } from '@/utils/request';
 
-function ProductCard(props: { imageUrl: string, name: string, price: number }) {
+function ProductCard(props: {
+    refreshData: (id?: number) => void;
+    setNotification: (notification: string | undefined) => void;
+    id: string;
+    imageUrl: string;
+    name: string;
+    cost: number;
+    count: number;
+    userId?: number
+  }) {
+  const [loading, setLoading] = useState(false);
+  const buyItem = () => {
+    setLoading(true);
+    buy(props.id, props.userId!).then(() => {
+      props.refreshData();
+      props.setNotification(`Вы успешно купили ${props.name}`);
+      setLoading(false);
+      setTimeout(() => {
+        props.setNotification(undefined);
+      }, 1500);
+    });
+  };
+
   return (
     <Card shadow="none" padding="xs" radius="md" withBorder h="100%">
+      <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }} />
       <Card.Section>
         <Image
           src={props.imageUrl}
@@ -16,60 +41,51 @@ function ProductCard(props: { imageUrl: string, name: string, price: number }) {
 
       <Text fz="12px" lh={1} pb={20} flex={1}>{props.name}</Text>
       <Flex justify="space-between">
-        <Text fw={500}>{Number(props.price).toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' })}</Text>
-        <ActionIcon variant="filled" size="sm" radius="lg">
-          <IconPlus stroke={3} />
-        </ActionIcon>
+        <div>
+          <Text fw={500}>
+            {Number(props.cost).toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' })}
+          </Text>
+          <Text fz="12px" lh={1} flex={1}>{props.count} шт.</Text>
+        </div>
+        <Button size="compact-sm" leftSection={<IconShoppingCart size={14} stroke={2} />} onClick={buyItem}>
+          Купить
+        </Button>
       </Flex>
     </Card>
   );
 }
 
-export function Products() {
+export function Products(props: {
+    items: {
+      [key: string]: Array<{
+        cost: number; count: number; group: string; id: string; img: string; name: string
+      }>
+    }
+    userId?: number;
+    refreshData: (id?: number) => void;
+    setNotification: (notification: string | undefined) => void;
+  }) {
   return (
     <Grid>
-      <Grid.Col span={6}>
-        <ProductCard
-          imageUrl="https://cdn.lentochka.lenta.com/resample/webp/250x250/photo/73103/9b384fa7-77c3-4f82-b3be-8aab1ca95f41.png"
-          name="Батончик TWIX Xtra с карамелью и печеньем, 82г"
-          price={77.11}
-        />
-      </Grid.Col>
-      <Grid.Col span={6}>
-        <ProductCard
-          imageUrl="https://cdn.lentochka.lenta.com/resample/webp/250x250/photo/580825/5e39ebf3-b80f-4288-ae4d-b5631a36cf81.png"
-          name="Шоколадные батончики SNICKERS Super с карамелью, арахисом и нугой, 80г"
-          price={59.99}
-        />
-      </Grid.Col>
-      <Grid.Col span={6}>
-        <ProductCard
-          imageUrl="https://cdn.lentochka.lenta.com/resample/webp/250x250/photo/72202/3339695ad286a637.png"
-          name="Вафли KINDER Bueno в молочном шоколаде, 43г"
-          price={89.48}
-        />
-      </Grid.Col>
-      <Grid.Col span={6}>
-        <ProductCard
-          imageUrl="https://cdn.lentochka.lenta.com/resample/webp/250x250/photo/282741/a67d7cef-b180-49b5-8a33-3ab0d76cb122.png"
-          name="Пирожное бисквитное KINDER Молочный ломтик с молочной начинкой, 28г"
-          price={55.99}
-        />
-      </Grid.Col>
-      <Grid.Col span={6}>
-        <ProductCard
-          imageUrl="https://cdn.lentochka.lenta.com/resample/webp/250x250/photo/369170/dd202b3a-a80b-4cdc-baee-0751d1ffeb95.png"
-          name="Напиток LIPTON Холодный зеленый чай негазированный, 0.5л"
-          price={79.99}
-        />
-      </Grid.Col>
-      <Grid.Col span={6}>
-        <ProductCard
-          imageUrl="https://cdn.lentochka.lenta.com/resample/webp/250x250/photo/658606/0d5c3f46-d864-4c23-82bd-00a688a66275.png"
-          name="Напиток ДОБРЫЙ Апельсин сильногазированный, 0.33л"
-          price={64.99}
-        />
-      </Grid.Col>
+      {Object.entries(props.items).map(([group, items]) => (
+        <>
+          <Grid.Col span={12}><Text>{group}</Text></Grid.Col>
+          {items.map(item => (
+            <Grid.Col span={6}>
+              <ProductCard
+                id={item.id}
+                imageUrl={item.img}
+                name={item.name}
+                cost={item.cost}
+                count={item.count}
+                userId={props.userId}
+                setNotification={props.setNotification}
+                refreshData={props.refreshData}
+              />
+            </Grid.Col>
+          ))}
+        </>
+      ))}
     </Grid>
   );
 }

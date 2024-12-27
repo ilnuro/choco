@@ -6,6 +6,6 @@ module.exports = {
   rules: {
     'react/react-in-jsx-scope': 'off',
     'import/extensions': 'off',
-    // 'max-len': ['error', { 'code': 80 }],
+    'max-len': ['error', { 'code': 200 }],
   },
 };
