@@ -6,7 +6,7 @@ const router = createBrowserRouter([
     path: '/',
     element: <HomePage />,
   },
-]);
+], { basename: '/choco' });
 
 export function Router() {
   return <RouterProvider router={router} />;
