@@ -1,0 +1,15 @@
+:root[data-mantine-color-scheme='dark'] {
+    --mantine-color-body: var(--mantine-color-dark-7);
+}
+
+:root[data-mantine-color-scheme='light'] {
+    --mantine-color-body: var(--mantine-color-gray-0);
+}
+
+body {
+    background-color: var(--mantine-color-body);
+}
+
+html, body {
+    height: 100%;
+}
