@@ -3,34 +3,28 @@ import { getMain, buy } from './request';
 
 const BASE = 'https://shirokovapp.dfx.li/api/chocoshop';
 
-describe('request — miniapp mode', () => {
+// These tests reflect NEW_BACKEND = false (current state).
+// When NEW_BACKEND = true: miniapp sends X-Telegram-Init-Data header instead of ?userId=
+describe('request — miniapp mode (NEW_BACKEND=false, uses ?userId=)', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ json: () => Promise.resolve({}) }));
   });
 
-  it('getMain sends X-Telegram-Init-Data header, no userId param', async () => {
-    await getMain({ mode: 'miniapp', initData: 'test_init_data', userId: undefined });
-    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
-      `${BASE}/mainpage`,
-      expect.objectContaining({
-        headers: expect.objectContaining({ 'X-Telegram-Init-Data': 'test_init_data' }),
-      })
-    );
+  it('getMain adds ?userId= in miniapp mode', async () => {
+    await getMain({ mode: 'miniapp', initData: 'test_init_data', userId: 123 });
     const url = vi.mocked(fetch).mock.calls[0][0] as string;
-    expect(url).not.toContain('userId');
+    expect(url).toContain('userId=123');
+    const [, options] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
+    expect((options.headers as Record<string, string>)['X-Telegram-Init-Data']).toBeUndefined();
   });
 
-  it('buy sends X-Telegram-Init-Data header, no userId param', async () => {
-    await buy({ mode: 'miniapp', initData: 'test_init_data', userId: undefined }, 'item-1');
+  it('buy adds ?userId= and ?itemId= in miniapp mode', async () => {
+    await buy({ mode: 'miniapp', initData: 'test_init_data', userId: 123 }, 'item-1');
     const url = vi.mocked(fetch).mock.calls[0][0] as string;
     expect(url).toContain('itemId=item-1');
-    expect(url).not.toContain('userId');
-    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
-      url,
-      expect.objectContaining({
-        headers: expect.objectContaining({ 'X-Telegram-Init-Data': 'test_init_data' }),
-      })
-    );
+    expect(url).toContain('userId=123');
+    const [, options] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
+    expect((options.headers as Record<string, string>)['X-Telegram-Init-Data']).toBeUndefined();
   });
 });
 
