@@ -58,18 +58,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [initData, setInitData] = useState<string | null>(null);
 
   useEffect(() => {
-    const tgInitData = window.Telegram?.WebApp?.initData;
+    const tg = window.Telegram?.WebApp;
 
-    if (tgInitData) {
+    if (tg) {
+      // Miniapp mode: determined by WebApp presence, not by initData content.
+      // initData can be an empty string on some Telegram clients.
       setMode('miniapp');
-      setInitData(tgInitData);
-      const params = new URLSearchParams(tgInitData);
-      const raw = params.get('user');
-      if (raw) {
-        try {
-          setUser(JSON.parse(raw));
-        } catch {
-          // initData present but user field not parseable — continue without user object
+      if (tg.initData) {
+        setInitData(tg.initData);
+        const params = new URLSearchParams(tg.initData);
+        const raw = params.get('user');
+        if (raw) {
+          try {
+            setUser(JSON.parse(raw));
+          } catch {
+            // initData present but user field not parseable — continue without user object
+          }
         }
       }
     } else {
@@ -100,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         mode,
         user,
         initData,
-        isAuthenticated: user !== null,
+        isAuthenticated: mode === 'miniapp' || user !== null,
         login,
         logout,
       }}
