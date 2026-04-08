@@ -130,3 +130,7 @@ dist
 .pnp.*
 
 .DS_Store
+
+# Dev artifacts
+artifacts/
+docs/
