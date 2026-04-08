@@ -1,5 +1,16 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+interface TelegramWebApp {
+  initData: string;
+  expand: () => void;
+}
+
+declare global {
+  interface Window {
+    Telegram?: { WebApp: TelegramWebApp };
+  }
+}
+
 export type AuthMode = 'miniapp' | 'browser' | null;
 
 export interface TelegramUser {
@@ -22,7 +33,7 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
-const STORAGE_KEY = 'tg_auth';
+export const STORAGE_KEY = 'tg_auth';
 const SESSION_TTL_SECONDS = 7 * 24 * 3600;
 
 function loadStoredSession(): TelegramUser | null {
@@ -47,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [initData, setInitData] = useState<string | null>(null);
 
   useEffect(() => {
-    const tgInitData = (window as any).Telegram?.WebApp?.initData;
+    const tgInitData = window.Telegram?.WebApp?.initData;
 
     if (tgInitData) {
       setMode('miniapp');
@@ -89,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         mode,
         user,
         initData,
-        isAuthenticated: mode === 'miniapp' || (mode === 'browser' && user !== null),
+        isAuthenticated: user !== null,
         login,
         logout,
       }}
