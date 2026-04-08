@@ -72,8 +72,8 @@ export function Products(props: {
   return (
     <Grid>
       {Object.entries(props.items).map(([group, groupItems]) => (
-        <div key={group}>
-          <Grid.Col span={12}><Text>{group}</Text></Grid.Col>
+        <>
+          <Grid.Col key={group} span={12}><Text>{group}</Text></Grid.Col>
           {groupItems.map((item) => (
             <Grid.Col span={6} key={item.id}>
               <ProductCard
@@ -88,7 +88,7 @@ export function Products(props: {
               />
             </Grid.Col>
           ))}
-        </div>
+        </>
       ))}
     </Grid>
   );
