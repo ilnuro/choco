@@ -1,29 +1,33 @@
 import { Card, Image, Text, Flex, Grid, Button, LoadingOverlay } from '@mantine/core';
 import { IconShoppingCart } from '@tabler/icons-react';
 import { useState } from 'react';
-import { buy } from '@/utils/request';
+import { buy, RequestAuth } from '@/utils/request';
 
 function ProductCard(props: {
-    refreshData: (id?: number) => void;
-    setNotification: (notification: string | undefined) => void;
-    id: string;
-    imageUrl: string;
-    name: string;
-    cost: number;
-    count: number;
-    userId?: number
-  }) {
+  auth: RequestAuth;
+  refreshData: () => void;
+  setNotification: (notification: string | undefined) => void;
+  id: string;
+  imageUrl: string;
+  name: string;
+  cost: number;
+  count: number;
+}) {
   const [loading, setLoading] = useState(false);
+
   const buyItem = () => {
     setLoading(true);
-    buy(props.id, props.userId!).then(() => {
-      props.refreshData();
-      props.setNotification(`Вы успешно купили ${props.name}`);
-      setLoading(false);
-      setTimeout(() => {
-        props.setNotification(undefined);
-      }, 1500);
-    });
+    buy(props.auth, props.id)
+      .then(() => {
+        props.refreshData();
+        props.setNotification(`Вы успешно купили ${props.name}`);
+        setTimeout(() => props.setNotification(undefined), 1500);
+      })
+      .catch(() => {
+        props.setNotification(`Ошибка при покупке ${props.name}`);
+        setTimeout(() => props.setNotification(undefined), 3000);
+      })
+      .finally(() => setLoading(false));
   };
 
   return (
@@ -56,35 +60,35 @@ function ProductCard(props: {
 }
 
 export function Products(props: {
-    items: {
-      [key: string]: Array<{
-        cost: number; count: number; group: string; id: string; img: string; name: string
-      }>
-    }
-    userId?: number;
-    refreshData: (id?: number) => void;
-    setNotification: (notification: string | undefined) => void;
-  }) {
+  items: {
+    [key: string]: Array<{
+      cost: number; count: number; group: string; id: string; img: string; name: string;
+    }>;
+  };
+  auth: RequestAuth;
+  refreshData: () => void;
+  setNotification: (notification: string | undefined) => void;
+}) {
   return (
     <Grid>
-      {Object.entries(props.items).map(([group, items]) => (
-        <>
+      {Object.entries(props.items).map(([group, groupItems]) => (
+        <div key={group}>
           <Grid.Col span={12}><Text>{group}</Text></Grid.Col>
-          {items.map(item => (
-            <Grid.Col span={6}>
+          {groupItems.map((item) => (
+            <Grid.Col span={6} key={item.id}>
               <ProductCard
                 id={item.id}
                 imageUrl={item.img}
                 name={item.name}
                 cost={item.cost}
                 count={item.count}
-                userId={props.userId}
+                auth={props.auth}
                 setNotification={props.setNotification}
                 refreshData={props.refreshData}
               />
             </Grid.Col>
           ))}
-        </>
+        </div>
       ))}
     </Grid>
   );
