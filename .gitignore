@@ -134,3 +134,4 @@ dist
 # Dev artifacts
 artifacts/
 docs/
+.claude/
